@@ -1,0 +1,178 @@
+#include <input/processors.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/outputs.h>
+#include <dt-bindings/zmk/pointing.h>
+#include <dt-bindings/zmk/ext_power.h>
+#include <dt-bindings/zmk/rgb.h>\
+
+&sk {
+    release-after-ms = <2000>;
+    quick-release;
+    /delete-property/ ignore-modifiers;
+};
+
+&msc_input_listener { 
+    input-processors = <&zip_scroll_scaler 2 1>;
+};
+&msc {
+    acceleration-exponent = <1>;
+    time-to-max-speed-ms = <100>;
+    delay-ms = <0>;
+};
+
+&soft_off {
+    hold-time-ms = <2000>;
+};
+
+/ {
+    behaviors {
+        kp_to_combo: kp_to_combo {
+            compatible = "zmk,behavior-macro-two-param";
+            #binding-cells = <2>;  // Expects layer ID (param 1) + keycode (param 2) when bound
+            wait-ms = <10>;        // 10ms delay between toggle and keypress
+            bindings
+                = <&macro_param_1to1>                // Route param 1 to the next behavior's arg
+                , <&to MACRO_PLACEHOLDER>            // Toggle layer (placeholder gets param 1)
+                , <&macro_param_2to1>                // Route param 2 to the next behavior's arg
+                , <&kp MACRO_PLACEHOLDER>            // Press keycode (placeholder gets param 2)
+                ;
+        };
+
+        ignore_comma_shift_macro: ignore_comma_shift_macro {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings =
+                <&macro_release &kp LSHFT>,
+                <&macro_tap &kp COMMA>,
+                <&macro_press &kp LSHFT>
+                ;
+        };
+
+        ignore_comma_shift: ignore_comma_shift {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp COMMA>, <&ignore_comma_shift_macro>;
+            mods = <(MOD_LSFT | MOD_RSFT)>;
+            keep-mods = <0>;
+        };
+    };
+
+    rgb_encoder: rgb_encoder {
+        compatible = "zmk,behavior-sensor-rotate";
+        #sensor-binding-cells = <0>;
+        bindings = <&rgb_ug RGB_BRI>, <&rgb_ug RGB_BRD>;
+    };
+
+    scroll_encoder: scroll_encoder {
+        compatible = "zmk,behavior-sensor-rotate";
+        #sensor-binding-cells = <0>;
+        bindings = <&msc SCRL_DOWN>, <&msc SCRL_UP>;
+
+        tap-ms = <100>;
+    };
+
+    combos {
+        compatible = "zmk,combos";
+
+        softoff {
+            bindings = <&soft_off>;
+            key-positions = <1 15 29>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+
+        default_layer {
+            display-name = "QWERTY";
+            bindings = <
+&kp TAB    &kp Q  &kp W  &kp E     &kp R  &kp T                                   &kp LC(UP)                      &kp Y     &kp U     &kp I                  &kp O         &kp P        &to 5
+&kp BSPC   &kp A  &kp S  &kp D     &kp F  &kp G                     &kp LC(LEFT)  &kp RS(Q)      &kp LC(RIGHT)    &kp H     &kp J     &kp K                  &kp L         &kp SEMI     &kp ENTER
+&kp LSHFT  &kp Z  &kp X  &kp C     &kp V  &kp B     &tog 4                        &kp LC(DOWN)                    &kp N     &kp M     &ignore_comma_shift    &kp KP_DOT    &kp FSLH     &kp LA(L)
+&kp LGUI    &kp LALT    &kp LCTRL     &mo 2    &kp SPACE    &mo 1
+            >;
+
+             sensor-bindings = <&inc_dec_kp C_VOLUME_UP C_VOLUME_DOWN>;
+        };
+
+        number {
+            display-name = "NUM";
+            bindings = <
+&kp ESC   &kp N1           &kp N2          &kp N3        &kp N4        &kp N5                                 &none                  &kp N6           &kp N7           &kp N8           &kp N9           &kp N0     &to 0
+&trans    &kp EXCL         &kp AT          &kp HASH      &kp DLLR      &kp PRCNT                   &none      &none      &none       &kp CARET        &kp AMPS         &kp STAR         &kp PLUS        &kp MINUS  &kp EQUAL
+&trans    &none            &none           &none         &none         &none        &kp C_MUTE                &none                  &none            &none            &none            &kp LT           &kp GT      &trans
+&trans        &trans        &trans      &trans        &trans        &trans
+            >;
+
+            sensor-bindings = <&inc_dec_kp LEFT RIGHT>;
+        };
+
+        // Karabiner Elements maps CMD + WASD to arrow keys. CMD + QE to switch windows/desktops.
+        // Karabiner Elements maps RSHFT + WASD & QE to mouse & clicks
+        symbol_arrow {
+            display-name = "SYMA";
+            bindings = <
+&to 3      &none       &none       &kp RG(Q)   &kp RG(E)   &none                                &kp PG_UP                        &kp DQT      &kp LPAR      &kp RPAR      &kp BSLH   &kp PIPE      &to 0 
+&trans     &kp RG(A)   &kp RG(S)   &kp RG(D)   &kp RG(F)   &none               &kp LS(PG_UP)    &kp RS(Q)      &kp LS(PG_DN)     &kp SQT      &kp LBRC      &kp RBRC      &kp MINUS  &kp UNDER     &none      
+&trans     &none       &none       &none       &none       &none     &none                      &kp PG_DN                        &kp GRAVE    &kp LBKT      &kp RBKT      &kp LT     &kp GT        &trans
+&trans     &trans     &trans       &none       &none       &none
+            >;
+
+            sensor-bindings = <&inc_dec_kp UP DOWN>;
+        };
+
+        // Karabiner Elemenets maps RSHFT + WASD & QE to mouse & clicks. LCTRL slows down mouse.
+        symbol_mouse {
+            display-name = "SYMM";
+            bindings = <
+&to 2      &none           &none           &kp RS(Q)       &kp RS(E)       &none                            &none                  &kp SQT      &kp LPAR      &kp RPAR      &kp BSLH   &kp PIPE      &to 0
+&none      &kp RS(A)       &kp RS(S)       &kp RS(D)       &kp RS(F)       &none                 &none      &none      &none       &kp DQT      &kp LBRC      &kp RBRC      &kp MINUS  &kp UNDER     &none      
+&none      &kp LC(RS(A))   &kp LC(RS(S))   &kp LC(RS(D))   &kp LC(RS(F))   &none       &none                &none                  &kp GRAVE    &kp LBKT      &kp RBKT      &kp LT     &kp GT        &trans
+&trans       &trans     &trans     &none      &none      &none 
+            >;
+
+            sensor-bindings = <&inc_dec_kp LEFT DOWN>;
+        };
+
+        function {
+            display-name = "FN";
+            bindings = <
+&none         &none      &none      &none      &none      &none                              &none                 &none      &none           &none          &none          &none        &to 0
+&none         &none      &none      &none      &none      &none                   &none      &none      &none      &none      &bt BT_SEL 0    &bt BT_SEL 1   &bt BT_SEL 2   &bt BT_CLR   &none
+&none         &none      &none      &none      &none      &none       &to 4                  &none                 &none      &none           &none          &none          &none        &trans
+&trans        &trans        &trans      &none      &none      &none
+            >;
+
+            sensor-bindings = <&rgb_encoder>;
+        };
+
+        // Raycast maps LALT + LCTRL + ALPHA_CHAR to app.
+        switcher_app {
+            display-name = "APP";
+            bindings = <
+&none      &kp_to_combo 0 LA(LC(Q))      &kp_to_combo 0 LA(LC(W))      &kp_to_combo 0 LA(LC(E))      &none                         &none                                                  &kp UP                     &kp_to_combo 0 LA(LC(Y))      &kp_to_combo 0 LA(LC(U))      &kp_to_combo 0 LA(LC(I))      &kp_to_combo 0 LA(LC(O))      &kp_to_combo 0 LA(LC(P))      &to 0
+&none      &none                         &none                         &kp_to_combo 0 LA(LC(D))      &kp_to_combo 0 LA(LC(F))      &kp_to_combo 0 LA(LC(G))                   &kp LEFT    &none        &kp RIGHT     &kp_to_combo 0 LA(LC(H))      &kp_to_combo 0 LA(LC(J))      &kp_to_combo 0 LA(LC(K))      &kp_to_combo 0 LA(LC(L))      &none                         &none
+&trans     &kp_to_combo 0 LA(LC(Z))      &kp_to_combo 0 LA(LC(X))      &kp_to_combo 0 LA(LC(C))      &kp_to_combo 0 LA(LC(V))      &kp_to_combo 0 LA(LC(B))       &none                   &kp DOWN                   &kp_to_combo 0 LA(LC(N))      &kp_to_combo 0 LA(LC(M))      &none                         &none                         &none                         &trans
+&kp_to_combo 0 LA(LC(A))      &kp_to_combo 0 LA(LC(R))      &kp_to_combo 0 LA(LC(T))      &kp_to_combo 0 LA(LC(S))      &to 5      &to 6
+            >;
+
+            sensor-bindings = <&inc_dec_kp C_VOLUME_UP C_VOLUME_DOWN>;
+        };
+
+        // Raycast maps LGUI + LCTRL + ALPHA_CHAR to software.
+        switcher_software {
+            display-name = "SOFTWARE";
+            bindings = <
+&none      &kp_to_combo 0 LG(LC(Q))      &kp_to_combo 0 LG(LC(W))      &kp_to_combo 0 LG(LC(E))      &kp_to_combo 0 LG(LC(R))      &kp_to_combo 0 LG(LC(T))                              &kp UP                      &kp_to_combo 0 LG(LC(Y))      &kp_to_combo 0 LG(LC(U))      &kp_to_combo 0 LG(LC(I))      &kp_to_combo 0 LG(LC(O))      &kp_to_combo 0 LG(LC(P))      &to 0
+&none      &kp_to_combo 0 LG(LC(A))      &kp_to_combo 0 LG(LC(S))      &kp_to_combo 0 LG(LC(D))      &kp_to_combo 0 LG(LC(F))      &kp_to_combo 0 LG(LC(G))                   &kp LEFT   &none        &kp RIGHT      &kp_to_combo 0 LG(LC(H))      &kp_to_combo 0 LG(LC(J))      &kp_to_combo 0 LG(LC(K))      &kp_to_combo 0 LG(LC(L))      &none                         &none
+&trans     &kp_to_combo 0 LG(LC(Z))      &kp_to_combo 0 LG(LC(X))      &kp_to_combo 0 LG(LC(C))      &kp_to_combo 0 LG(LC(V))      &kp_to_combo 0 LG(LC(B))       &none                  &kp DOWN                    &kp_to_combo 0 LG(LC(N))      &kp_to_combo 0 LG(LC(M))      &none                         &none                         &none                         &trans
+&kp_to_combo 0 LA(LC(A))      &kp_to_combo 0 LA(LC(R))      &kp_to_combo 0 LA(LC(T))      &kp_to_combo 0 LA(LC(S))      &to 5      &to 6
+            >;
+
+            sensor-bindings = <&inc_dec_kp C_VOLUME_UP C_VOLUME_DOWN>;
+        };
+    };
+};
