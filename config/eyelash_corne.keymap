@@ -58,6 +58,24 @@
             mods = <(MOD_LSFT | MOD_RSFT)>;
             keep-mods = <0>;
         };
+        
+        ignore_period_shift_macro: ignore_period_shift_macro {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings =
+                <&macro_release &kp LSHFT>,
+                <&macro_tap &kp PERIOD>,
+                <&macro_press &kp LSHFT>
+                ;
+        };
+
+        ignore_period_shift: ignore_period_shift {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp PERIOD>, <&ignore_period_shift_macro>;
+            mods = <(MOD_LSFT | MOD_RSFT)>;
+            keep-mods = <0>;
+        };
     };
 
     rgb_encoder: rgb_encoder {
@@ -89,9 +107,9 @@
         default_layer {
             display-name = "QWERTY";
             bindings = <
-&kp TAB    &kp Q  &kp W  &kp E     &kp R  &kp T                                   &kp LC(UP)                      &kp Y     &kp U     &kp I                  &kp O         &kp P        &to 5
-&kp BSPC   &kp A  &kp S  &kp D     &kp F  &kp G                     &kp LC(LEFT)  &kp RS(Q)      &kp LC(RIGHT)    &kp H     &kp J     &kp K                  &kp L         &kp SEMI     &kp ENTER
-&kp LSHFT  &kp Z  &kp X  &kp C     &kp V  &kp B     &tog 4                        &kp LC(DOWN)                    &kp N     &kp M     &ignore_comma_shift    &kp KP_DOT    &kp FSLH     &kp LA(L)
+&kp TAB    &kp Q  &kp W  &kp E     &kp R  &kp T                                   &kp LC(UP)                      &kp Y     &kp U     &kp I                  &kp O                   &kp P        &to 5
+&kp BSPC   &kp A  &kp S  &kp D     &kp F  &kp G                     &kp LC(LEFT)  &kp RS(Q)      &kp LC(RIGHT)    &kp H     &kp J     &kp K                  &kp L                   &kp SEMI     &kp ENTER
+&kp LSHFT  &kp Z  &kp X  &kp C     &kp V  &kp B     &tog 4                        &kp LC(DOWN)                    &kp N     &kp M     &ignore_comma_shift    &ignore_period_shift    &kp FSLH     &kp LA(L)
 &kp LGUI    &kp LALT    &kp LCTRL     &mo 2    &kp SPACE    &mo 1
             >;
 
@@ -102,8 +120,8 @@
             display-name = "NUM";
             bindings = <
 &kp ESC   &kp N1           &kp N2          &kp N3        &kp N4        &kp N5                                 &none                  &kp N6           &kp N7           &kp N8           &kp N9           &kp N0     &to 0
-&trans    &kp EXCL         &kp AT          &kp HASH      &kp DLLR      &kp PRCNT                   &none      &none      &none       &kp CARET        &kp AMPS         &kp STAR         &kp PLUS        &kp MINUS  &kp EQUAL
-&trans    &none            &none           &none         &none         &none        &kp C_MUTE                &none                  &none            &none            &none            &kp LT           &kp GT      &trans
+&trans    &kp EXCL         &kp AT          &kp HASH      &kp DLLR      &kp PRCNT                   &none      &none      &none       &kp CARET        &kp AMPS         &kp STAR         &kp LT           &kp GT     &kp EQUAL
+&trans    &none            &none           &kp FSLH      &kp STAR      &none        &kp C_MUTE                &none                  &none            &kp PLUS         &kp MINUS        &kp PERIOD       &none      &trans
 &trans        &trans        &trans      &trans        &trans        &trans
             >;
 
@@ -115,11 +133,11 @@
         symbol_arrow {
             display-name = "SYMA";
             bindings = <
-&to 3      &none       &none       &kp RG(Q)   &kp RG(E)   &none                                &kp PG_UP                        &kp DQT      &kp LPAR      &kp RPAR      &kp BSLH   &kp PIPE      &to 0 
+&trans     &none       &none       &kp RG(Q)   &kp RG(E)   &none                                &kp PG_UP                        &kp DQT      &kp LPAR      &kp RPAR      &kp BSLH   &kp PIPE      &to 0 
 &trans     &kp RG(A)   &kp RG(S)   &kp RG(D)   &kp RG(F)   &none               &kp LS(PG_UP)    &kp RS(Q)      &kp LS(PG_DN)     &kp SQT      &kp LBRC      &kp RBRC      &kp MINUS  &kp UNDER     &none      
-&trans     &none       &none       &none       &none       &none     &none                      &kp PG_DN                        &kp GRAVE    &kp LBKT      &kp RBKT      &kp LT     &kp GT        &trans
+&trans     &none       &none       &none       &none       &none     &none                      &kp PG_DN                        &kp GRAVE    &kp LBKT      &kp RBKT      &kp LT     &kp GT        &to 3
 &trans     &trans     &trans       &none       &none       &none
-            >;
+            >;  
 
             sensor-bindings = <&inc_dec_kp UP DOWN>;
         };
@@ -128,9 +146,9 @@
         symbol_mouse {
             display-name = "SYMM";
             bindings = <
-&to 2      &none           &none           &kp RS(Q)       &kp RS(E)       &none                            &none                  &kp SQT      &kp LPAR      &kp RPAR      &kp BSLH   &kp PIPE      &to 0
+&none      &none           &none           &kp RS(Q)       &kp RS(E)       &none                            &none                  &kp SQT      &kp LPAR      &kp RPAR      &kp BSLH   &kp PIPE      &to 0
 &none      &kp RS(A)       &kp RS(S)       &kp RS(D)       &kp RS(F)       &none                 &none      &none      &none       &kp DQT      &kp LBRC      &kp RBRC      &kp MINUS  &kp UNDER     &none      
-&none      &kp LC(RS(A))   &kp LC(RS(S))   &kp LC(RS(D))   &kp LC(RS(F))   &none       &none                &none                  &kp GRAVE    &kp LBKT      &kp RBKT      &kp LT     &kp GT        &trans
+&none      &kp LC(RS(A))   &kp LC(RS(S))   &kp LC(RS(D))   &kp LC(RS(F))   &none       &none                &none                  &kp GRAVE    &kp LBKT      &kp RBKT      &kp LT     &kp GT        &to 0
 &trans       &trans     &trans     &none      &none      &none 
             >;
 
